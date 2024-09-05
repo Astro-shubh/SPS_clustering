@@ -97,74 +97,6 @@ void make_cartesian_clusters::break_clusters(double threshold){
 
 // condense_cluslist_labelters uses the 2D array of labels_full and weights_sorted to remove the noise falling off the clusters (small clusters with size less than core_size) and label them according to the inheritence 
 
-void make_cartesian_clusters::get_stabilities(int location, int stage){
-	int current_label = tree_labels[stage][location];   // Stores the label of the new cluster
-	int first_label = current_label;                    // Stores the original label of cluster
-	int current_size = tree_sizes[stage][location];     // Stores the current size of the new cluster
-	int relative_stage = 0;                               // gives the stage relative to the initial stage
-	int parent = tree_connections[stage][location];     // Stores the parent of the new cluster
-	vector<int> children;                               // Will store the children labels of the cluster
-	vector<int> members;                                // Will store the member of the original cluster if stability is non-zero
-	double stability = 0;                               // Cluster stability parameter thats gets updated at each survival stage of the cluster
-	double birth = 1.0/braking_threshold[stage];        // Inverse of threshold at birth
-	int birth_stage = stage;                            // Stores the stage at which cluster is born
-	int death_stage;                                    // Will store the stage at which cluster disappears if stability is non zero
-	while(stage+relative_stage+1 < tree_connections.size()){                         // Loop untill the size of cluster goes bellow the core size
-		int freq=0, ii, jj;
-		vector<int> indices, connection;            // Indices at which the current label matches to the parent of the next label 
-							    // (at which children are located in next stage), connection is vector to store parent of next stage
-
-		connection = tree_connections[stage+relative_stage+1];
-		for(ii=0; ii<connection.size(); ii++){       // loop over all the parents of next step
-			if(connection[ii] == current_label){ // See where the current current label is present in the parent of next stage
-				indices.push_back(ii);       // Store the locations of children
-				freq = freq+1;               // If the current label is present more than once (i.e. cluster is breaking)
-			}
-		}
-		if(freq > 1){                                // If cluster is breaking
-			death_stage = stage+relative_stage;
-			for(ii=0; ii<freq; ii++){            // For each child in the next label
-				get_stabilities(indices[ii], stage+relative_stage+1);           // Run the same function get_stability for the children
-				children.push_back(tree_labels[stage+relative_stage+1][indices[ii]]);  // Push the children labels that is going to be
-													// stored in cluster struct
-				int new_size = tree_sizes[stage+relative_stage][indices[ii]];          // Size of the child
-				double death = 1.0/braking_threshold[stage + relative_stage];          // Inverse of threshold at death
-				stability = stability + (current_size - new_size)*(death - birth);     // Stability contribution from child elements
-			}
-
-			break;                                                                         // Break the while loop as the cluster is broken now
-		}
-		if(freq == 1){                                       // If cluster survived this stage
-			int new_size = tree_sizes[stage+relative_stage+1][indices[0]];                   // new size of cluster at this stage
-			double death = 1.0/braking_threshold[stage + relative_stage];                  // Inverse of threshold at this stage  
-			stability = stability + (current_size - new_size)*(death - birth);             // Contributions from the fallen points between this
-												       // and previous stage
-			current_size = new_size;                                                       // Update the size of cluster
-			current_label = tree_labels[stage+relative_stage+1][indices[0]];                 // Update the label
-			relative_stage = relative_stage + 1;                                             // Update the relative stage
-		}
-		if(freq == 0){
-			break;
-		}
-	}
-	if(stability > 0){        // If the cluster stability is non zero (i.e. it survived for at least one stage)
-		int ii;
-		for(ii=0; ii<full_labels[birth_stage].size(); ii++){      // loop over the number of labels at that stage
-			if(full_labels[birth_stage][ii] == first_label){  // if the label at the initial stage matches to the first label of the cluster
-				members.push_back(ii);                    // Push that index to members (indexes in full_labels represent the index of DM-Time data point
-			}
-		}
-		cluster clstr;                                            // Prepare a cluster type object
-		clstr.elements = members;
-		clstr.child = children;
-		clstr.parent = parent;
-		clstr.label = first_label;
-		clstr.stability = stability;
-		clstr.birth_stage = birth_stage;
-		clstr.death_stage = death_stage;
-		clusters_core.push_back(clstr);                           // Push this object to a vector of cluster objects
-	}
-}
 
 
 void make_cartesian_clusters::traceback_stability(){
@@ -449,7 +381,7 @@ void make_cartesian_clusters::extract_clusters(int stage, int index){
 				}
 			}
 		}
-		if(current_cluster.stability > 1.01*children_stability){
+		if(current_cluster.stability > 1.0*children_stability){
 			good_clusters.push_back(current_cluster);
 		}
 		else{
@@ -467,26 +399,13 @@ void make_cartesian_clusters::extract_clusters(int stage, int index){
 		// if(children_stability > parent_stability){ call the extract_clusters for all children of the current cluster)
 		// else{ store the cluster in good_cluster array
 	}
+	if(stage+1 >= clusters_stable.size()-1){          // Store all the clusters present in the last stage
+		good_clusters.push_back(current_cluster);
+	}
+
+
 }
 
-void make_cartesian_clusters::stat_clusters(){
-	int ii, jj, kk=0, num_clusters;
-	vector<int> lbls, sizes;
-	num_clusters = *max_element(labels.begin(), labels.end());  // If the labeling of each step is like (1,2,3,4,...) the max of this will be the num_clusters
-	for(ii=1; ii<num_clusters+1; ii++){                  // Lopp over the current cluster labels
-		lbls.push_back(ii);                          // store the labels
-		for(jj=0; jj<labels.size(); jj++){          // Compute the size of clusters for each label
-			if(labels[jj] == ii){
-				kk=kk+1;
-			}
-		}
-		sizes.push_back(kk);		// Store the size
-	}
-	tree_labels.push_back(lbls);             // Update the gobal tree arrays
-	tree_sizes.push_back(sizes);
-	lbls.clear();
-	sizes.clear();
-}
 
 
 

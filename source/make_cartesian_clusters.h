@@ -39,11 +39,9 @@ class make_cartesian_clusters{
 // This also stores the connections of new clusters to older set of cluster in previous step
                 void break_clusters(double threshold);
 		void extract_clusters(int stage, int index);
-		void get_stabilities(int location, int stage);
 		void get_stable_clusters();
 		void traceback_stability();
 // stat_clusters() stores the labels and sizes of each clusters at each state
-                void stat_clusters();
 //		void extract_clusters();
 // core is used to compute the core distance
                 const int core=10;

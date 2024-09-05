@@ -1,2 +1,2 @@
-go:read_usignclass read_usignclass.cpp source/read_spccl.cpp source/split_string.cpp source/prepare_data.cpp source/Spanning_tree_MRD.cpp
-	g++ -o read_usignclass read_usignclass.cpp source/read_spccl.cpp source/split_string.cpp source/prepare_data.cpp source/Spanning_tree_MRD.cpp source/make_optimised_clusters.cpp
+go:test_pipeline test_pipeline.cpp source/read_spccl.cpp source/split_string.cpp source/prepare_data.cpp source/Spanning_tree_cartesian.cpp source/make_cartesian_clusters.cpp source/width_clustering.cpp
+	g++ -o test_pipeline test_pipeline.cpp source/read_spccl.cpp source/split_string.cpp source/prepare_data.cpp source/Spanning_tree_cartesian.cpp source/make_cartesian_clusters.cpp source/width_clustering.cpp
