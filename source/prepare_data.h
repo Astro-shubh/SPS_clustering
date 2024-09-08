@@ -12,14 +12,16 @@ class prepare_data{
                 std::vector<std::string> input_vector;
                 prepare_data(std::vector<std::string> V);
                 std::vector<double> output_vector;
+		std::vector<float> output_vector1;
                 std::vector<double> processing_vector;
-		std::vector<double> ToA;
-		std::vector<double> Time;
-		std::vector<double> Width;
-		std::vector<double> Sigma;
+		std::vector<float> ToA;
+		std::vector<float> Time;
+		std::vector<float> Width;
+		std::vector<float> Sigma;
                 void MJD_to_ToA();
                 void DM_to_Time();
                 void str_to_double();
+		void str_to_float();
 };
 
 #endif

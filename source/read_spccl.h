@@ -11,10 +11,10 @@ class read_spccl
 		read_spccl(std::string file_name);
 		void prepare();
 
-		std::vector<double> ToA;
-		std::vector<double> DM_Time;
-		std::vector<double> WidthD;
-		std::vector<double> SigmaD;
+		std::vector<float> ToA;
+		std::vector<float> DM_Time;
+		std::vector<float> WidthD;
+		std::vector<float> SigmaD;
 
                 void read();
                 void message();

@@ -16,17 +16,17 @@ class make_cartesian_clusters{
 			std::vector<int> child;
 			int parent;
 			int label;
-			double stability;
+			float stability;
 			int birth_stage;
 			int death_stage;
 		};
 		std::vector<cluster> clusters_core;
 		std::vector<cluster> good_clusters;
 		std::vector<std::vector<cluster>> clusters_stable;
-                std::vector<double> weights, weights_sorted;
+                std::vector<float> weights, weights_sorted;
                 std::vector<int> child, parent, labels;
 // do_clustering() executes all the functions sequentially
-		make_cartesian_clusters(std::vector<int> Parent, std::vector<int> Child, std::vector<double> Weights, int data_size);
+		make_cartesian_clusters(std::vector<int> Parent, std::vector<int> Child, std::vector<float> Weights, int data_size);
 // make_clusters() sorts the weights and calls the relevant functions with decreasing order of threshold
 		void make_clusters();
 // 2D Vectors to store the dendogram of clustering, tree_labels to store the labels of clusters, tree_connections to store the labels of previous stage, 
@@ -37,7 +37,7 @@ class make_cartesian_clusters{
 // make_clusters() sorts the weights and calls the relevant functions with decreasing order of threshold
 // break_clusters() breaks the Minimum spanning tree into clusters and relabels them according to the splits. 
 // This also stores the connections of new clusters to older set of cluster in previous step
-                void break_clusters(double threshold);
+                void break_clusters(float threshold);
 		void extract_clusters(int stage, int index);
 		void get_stable_clusters();
 		void traceback_stability();
@@ -46,8 +46,8 @@ class make_cartesian_clusters{
 // core is used to compute the core distance
                 const int core=10;
                 int i, j, k, size, current_size;
-		std::vector<double> braking_threshold;
-                double var;
+		std::vector<float> braking_threshold;
+                float var;
 };
 
 #endif

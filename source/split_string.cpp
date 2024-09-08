@@ -10,7 +10,7 @@ vector<string> string_split(string line){
         line=line+'\n';
         int i,j;
         j=1;
-        for(i=0;i<line.size();i++){
+        for(i=0;i<line.size();++i){
                 if(line[i] == ' ' || line[i] == '\n' || line[i] == '	'){
                         if(j == 1){
                                 v.push_back(s);

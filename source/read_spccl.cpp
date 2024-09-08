@@ -17,7 +17,7 @@ void read_spccl::read(){          // Function to perform the read
                         Width.push_back(v[2]);
                         Sigma.push_back(v[3]);
                 }
-                i++;
+                ++i;
         }
         infile.close();
 }
@@ -32,11 +32,11 @@ void read_spccl::prepare(){
 	DM_Obj.DM_to_Time();
 	DM_Time=DM_Obj.Time;
 	prepare_data Width_Obj(Width);
-	Width_Obj.str_to_double();
-	WidthD=Width_Obj.output_vector;
+	Width_Obj.str_to_float();
+	WidthD=Width_Obj.output_vector1;
 	prepare_data Sigma_Obj(Sigma);
-	Sigma_Obj.str_to_double();
-	SigmaD=Sigma_Obj.output_vector;
+	Sigma_Obj.str_to_float();
+	SigmaD=Sigma_Obj.output_vector1;
 
 }
 void read_spccl::message(){cout << filename << endl;}
