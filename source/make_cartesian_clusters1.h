@@ -8,7 +8,6 @@
 #include <cfloat>
 #include <bits/stdc++.h>
 #include <algorithm>
-#include <chrono>
 
 class make_cartesian_clusters{
         public:
@@ -33,7 +32,7 @@ class make_cartesian_clusters{
 // 2D Vectors to store the dendogram of clustering, tree_labels to store the labels of clusters, tree_connections to store the labels of previous stage, 
 // tree sizes to store the size of the clusters
 
-		std::vector<std::vector<int>> full_labels;
+		std::vector<std::vector<int>> tree_labels, tree_connections, tree_sizes, full_labels;
         private:
 // make_clusters() sorts the weights and calls the relevant functions with decreasing order of threshold
 // break_clusters() breaks the Minimum spanning tree into clusters and relabels them according to the splits. 

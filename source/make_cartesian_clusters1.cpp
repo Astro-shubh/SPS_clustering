@@ -14,27 +14,21 @@ make_cartesian_clusters::make_cartesian_clusters(vector<int> Parent, vector<int>
 
 void make_cartesian_clusters::break_clusters(float threshold){
 	int ii, jj, pre, kk, lbl=1, max_label=1;     // The zeroth lebel to assign, then it will be increased by 1 for each new cluster. The cluster labels will be (1,2,3,4....)
-	vector<int> labeling_status(size, 0), list_size, indices;  // labeling_status stores if a given element has be relebelled in this cycle or not, connect stores
+	vector<int> labeling_status(size, 0), list_label, list_size, list_parent;  // labeling_status stores if a given element has be relebelled in this cycle or not, connect stores
 							// the parent of new clusters
+//	connect.push_back(1);          // The first cluster in this step will be directly a chind of the first cluster of the previous node
 
+// Make the labeling status of the first node to be 1, in order to avoid complications
+// 	labeling_status[0] = 1;
 // Looping over elements to detect breaks and relebel the resultant child clusters
 	for(jj=0; jj<size; ++jj){
-		if(weights[jj] > threshold){
-			parent[jj] = -1;
-		} 
-		if(labels[jj] != 0){
-			indices.push_back(jj);
-		}
-	}
-
-	for(ii=0; ii<indices.size(); ++ii){
-		 jj = indices[ii];
-		 if(labeling_status[jj] == 0){           // Enter the loop only if the element is not noise
+		 if(labels[jj] != 0){           // Enter the loop only if the element is not noise
 			 
+			 if(labeling_status[jj] == 0){  // enter the loop only if the element has not already been lebeled this cycle
 				 vector<int> branch;    // Branch stores the unlabeled connected elements from the current element to the first node until a break is found 
 				 branch.push_back(jj);  // First member of branch is current elelment
 				 pre=jj;        // pre is the index of the current element
-				 while(parent[pre] != -1){   // go backwards towards the first node until we find a 
+				 while(parent[pre] != -1 && weights[pre] < threshold){   // go backwards towards the first node until we find a 
 					 if(labeling_status[parent[pre]] == 1){
 						 break;
 					 }
@@ -42,7 +36,7 @@ void make_cartesian_clusters::break_clusters(float threshold){
 					 branch.push_back(pre);
 				 }
 
-				 if(labeling_status[parent[pre]] == 1){               // update the branch to the label of the connected labeled node
+				 if(labeling_status[parent[pre]] == 1 && weights[pre] < threshold){               // update the branch to the label of the connected labeled node
 					 lbl = labels[parent[pre]];
 						 
 				 }
@@ -58,33 +52,46 @@ void make_cartesian_clusters::break_clusters(float threshold){
 					 labeling_status[branch[kk]] = 1;
 				 }
 			 }
+		 }
 	}
 	
 	vector<int> uniq_labels;
-	int lsize;
+	int lsize, itr;
 	uniq_labels = labels;
 	sort(uniq_labels.begin(), uniq_labels.end());
 	auto id = unique(uniq_labels.begin(), uniq_labels.end());
 	uniq_labels.resize(distance(uniq_labels.begin(), id));
-	auto id0 = find(uniq_labels.begin(), uniq_labels.end(), 0);
-	if(id0 != uniq_labels.end()){
-		uniq_labels.erase(id0);
-	}
+//	cout << uniq_labels.size() << endl;
 	for(jj=0; jj< uniq_labels.size(); ++jj){
-		lsize = count(labels.begin(), labels.end(), uniq_labels[jj]);
-		if(lsize < core){
-			replace(labels.begin(), labels.end(), uniq_labels[jj], 0);
-		}
-		else{
-			list_size.push_back(lsize);
-		}
-	}
-	for(kk=0; kk<labels.size(); ++kk){
-		if(labels[kk] == 0){
-			parent[kk] = -1;
+		if(uniq_labels[jj] != 0){
+			lsize = count(labels.begin(), labels.end(), uniq_labels[jj]);
+			if(lsize < core){
+				replace(labels.begin(), labels.end(), uniq_labels[jj], 0);
+				for(kk=0; kk<labels.size(); ++kk){
+					if(labels[kk] == uniq_labels[jj]){
+						parent[kk] = -1;
+					}
+				}
+			}
+			else{
+                                list_label.push_back(uniq_labels[jj]);
+                                list_size.push_back(lsize);
+                                itr = full_labels.size();
+                                if(itr == 0){
+                                        list_parent.push_back(1);
+                                }
+                                else{
+                                        auto id = find(labels.begin(), labels.end(), uniq_labels[jj]);
+                                        list_parent.push_back(full_labels[itr-1][id - labels.begin()]);
+                                }
+                        }
+
 		}
 	}
 	current_size = *max_element(list_size.begin(), list_size.end());
+	tree_connections.push_back(list_parent);	// Add the connect vector to the set of vectors collecting the connections for the final
+	tree_labels.push_back(list_label);
+	tree_sizes.push_back(list_size);
 	full_labels.push_back(labels);
 }
 
@@ -409,10 +416,7 @@ void make_cartesian_clusters::make_clusters(){
 	for(i=0; i<size; ++i){
 		labels.push_back(1);
 	}
-	auto now = chrono::system_clock::now();
-	auto duration = now.time_since_epoch();
-	auto milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
-	cout << "Started breaking at: " << milliseconds << endl;
+
 // Sorting the vector of weights
 	vector<float> thresholds;
 	for(i=0; i<weights.size(); ++i){
@@ -435,32 +439,11 @@ void make_cartesian_clusters::make_clusters(){
 	
 	}
 
-	now = chrono::system_clock::now();
-	duration = now.time_since_epoch();
-	milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
-	cout << "Done breaking now started get stability at: " << milliseconds << endl;
-
 	get_stable_clusters();
-	now = chrono::system_clock::now();
-        duration = now.time_since_epoch();
-        milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
-        cout << "Done get stability and now tracing back at: " << milliseconds << endl;
-
 	traceback_stability();
-	now = chrono::system_clock::now();
-        duration = now.time_since_epoch();
-        milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
-        cout << "Done tracing back now extracting clusters at: " << milliseconds << endl;
-
 	for(ii=0; ii<clusters_stable[0].size(); ++ii){
 		extract_clusters(0, ii);
 	}
-
-	now = chrono::system_clock::now();
-        duration = now.time_since_epoch();
-        milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
-        cout << "Done extracting clusters at: " << milliseconds << endl;
-
 	ofstream good_labels("good_cluster_labels.txt");
 	for(ii=0; ii<good_clusters.size(); ++ii){
 		for(jj=0; jj<good_clusters[ii].elements.size(); jj++){
