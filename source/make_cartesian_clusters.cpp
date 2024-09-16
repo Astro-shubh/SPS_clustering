@@ -3,18 +3,18 @@ using namespace std;
 
 
 // Constructor
-make_cartesian_clusters::make_cartesian_clusters(vector<int> Parent, vector<int> Child, vector<float> Weights, int data_size){
-	child=Child;
+make_cartesian_clusters::make_cartesian_clusters(vector<int> Parent, vector<float> Weights, int data_size, int Core){
 	parent=Parent;
 	weights=Weights;
 	size= data_size;
+	core = Core;
 }
 
 
 
 void make_cartesian_clusters::break_clusters(float threshold){
 	int ii, jj, pre, kk, lbl=1, max_label=1;     // The zeroth lebel to assign, then it will be increased by 1 for each new cluster. The cluster labels will be (1,2,3,4....)
-	vector<int> labeling_status(size, 0), list_size, indices;  // labeling_status stores if a given element has be relebelled in this cycle or not, connect stores
+	vector<int> labeling_status(size, 0), indices;  // labeling_status stores if a given element has be relebelled in this cycle or not, connect stores
 							// the parent of new clusters
 
 // Looping over elements to detect breaks and relebel the resultant child clusters
@@ -28,8 +28,8 @@ void make_cartesian_clusters::break_clusters(float threshold){
 	}
 
 	for(ii=0; ii<indices.size(); ++ii){
-		 jj = indices[ii];
-		 if(labeling_status[jj] == 0){           // Enter the loop only if the element is not noise
+		jj = indices[ii]; 
+		if(labeling_status[jj] == 0){           // Enter the loop only if the element is not noise
 			 
 				 vector<int> branch;    // Branch stores the unlabeled connected elements from the current element to the first node until a break is found 
 				 branch.push_back(jj);  // First member of branch is current elelment
@@ -58,6 +58,7 @@ void make_cartesian_clusters::break_clusters(float threshold){
 					 labeling_status[branch[kk]] = 1;
 				 }
 			 }
+
 	}
 	
 	vector<int> uniq_labels;
@@ -75,16 +76,12 @@ void make_cartesian_clusters::break_clusters(float threshold){
 		if(lsize < core){
 			replace(labels.begin(), labels.end(), uniq_labels[jj], 0);
 		}
-		else{
-			list_size.push_back(lsize);
-		}
 	}
 	for(kk=0; kk<labels.size(); ++kk){
 		if(labels[kk] == 0){
 			parent[kk] = -1;
 		}
 	}
-	current_size = *max_element(list_size.begin(), list_size.end());
 	full_labels.push_back(labels);
 }
 
@@ -105,9 +102,7 @@ void make_cartesian_clusters::traceback_stability(){
 			cluster clstr, clstr1;
 			int current_label = clusters_stage[jj].label;
 			vector<int> label_list;
-//			cout << clusters_stable[ia-1].size() << endl;
 			for(kk=0; kk<clusters_stable[ia-1].size(); ++kk){
-//				cout << "in loop " << kk << endl;
 				label_list.push_back(clusters_stable[ia-1][kk].label);
 
 			}
@@ -151,16 +146,11 @@ void make_cartesian_clusters::traceback_stability(){
 					if(children_stability > clusters_stage1[pidx].stability){
 						clusters_stable[ia-1][pidx].stability = children_stability;
 					}
-//					else{
-//						cout << "cluster is stable" << endl;
-//						final_clusters.push_back(clusters_stable[ia-1][pidx]);
-//					}
 				}
 			}
 		}
 	}
 
-	//   Now go through these clusters and find the stable ones
 	
 }
 
@@ -181,6 +171,12 @@ void make_cartesian_clusters::get_stable_clusters(){
 		int max1;
 		max1 = *max_element(stage1_lbls.begin(), stage1_lbls.end());               // maximum label at the current stage
 		max_lbl = max(max1, max_lbl);
+		vector<int> clstr_labels;                                                  // Store labels of previous stage clusters
+		if(clusters_stable.size() != 0){
+			for(kk=0; kk<clusters_stable[clusters_stable.size()-1].size(); ++kk){
+				clstr_labels.push_back(clusters_stable[clusters_stable.size()-1][kk].label);
+			}
+		}
 		for(jj=0; jj<num_labels; ++jj){			// ** Careful with this loop, assumes noise to be present in every stage **, if posible, use a condition.
 		if(uniq_lbls[jj] != 0){
 			vector<int> elements, child_labels, child_idx;        // Stores the index of the current label and child labels for the current label
@@ -188,7 +184,7 @@ void make_cartesian_clusters::get_stable_clusters(){
 				if(stage_lbls[kk] == uniq_lbls[jj]){
 					elements.push_back(kk);
 					if(stage1_lbls[kk] != 0){
-						child_labels.push_back(stage1_lbls[kk]);  // Only stores non noise child labels
+						child_labels.push_back(stage1_lbls[kk]);  // Only stores no n noise child labels
 						child_idx.push_back(kk);
 					}
 				}
@@ -201,10 +197,6 @@ void make_cartesian_clusters::get_stable_clusters(){
 				uniq_lbls1.resize(distance(uniq_lbls1.begin(), id1));
 				if(uniq_lbls1.size() == 1){                    // If there is only one child of the current label (i.e. cluster will survive next breaking
 					if(clusters_stable.size() > 0){       // If there are already layers of clusters from previous stages
-						vector<int> clstr_labels;
-						for(kk=0; kk<clusters_stable[clusters_stable.size()-1].size(); ++kk){  // Get the cluster with same label from previous step
-							clstr_labels.push_back(clusters_stable[clusters_stable.size()-1][kk].label);
-						}
 						auto id2 = find(clstr_labels.begin(), clstr_labels.end(), uniq_lbls[jj]);
 						if(id2 != clstr_labels.end()){
 							cluster clstr;
@@ -244,8 +236,6 @@ void make_cartesian_clusters::get_stable_clusters(){
 					for(kk=0; kk<child_idx.size(); ++kk){
 						full_labels[ii+1][child_idx[kk]] = uniq_lbls[jj];
 					}
-//					cout << " replacing " << uniq_lbls1[0] << " by " << uniq_lbls[jj] << endl;
-//					replace(full_labels[ii+1].begin(), full_labels[ii+1].end(), uniq_lbls1[0], uniq_lbls[jj]); // Label is going to survive and hence replace 
 																   // all the child labels by the current label
 				}
 
@@ -253,10 +243,6 @@ void make_cartesian_clusters::get_stable_clusters(){
 				if(uniq_lbls1.size() > 1){      // If there are more than one children (i.e. cluster is splitting)
 					cluster clstr;
 					if(clusters_stable.size() > 0){    // If there already are parent clusters stored for this label
-						vector<int> clstr_labels;
-						for(kk=0; kk<clusters_stable[clusters_stable.size()-1].size(); ++kk){
-							clstr_labels.push_back(clusters_stable[clusters_stable.size()-1][kk].label);
-						}
 						auto id2 = find(clstr_labels.begin(), clstr_labels.end(), uniq_lbls[jj]);
 						if(id2 != clstr_labels.end()){
 							int idx = id2 - clstr_labels.begin();
@@ -264,17 +250,14 @@ void make_cartesian_clusters::get_stable_clusters(){
 							clstr.stability = clstr.stability + (clstr.elements.size())*(1/braking_threshold[ii] - 1/braking_threshold[clstr.birth_stage]);
 							clstr.elements = elements;     // Update the elements
 							clstr.death_stage = ii;        // Now we know the death stage of the cluster
-							//clusters_array.push_back(clstr); // Push back the final stage of the cluster
 						}
 						else{
 							clstr.elements = elements;
-							//clstr.child = uniq_lbls1;
 							clstr.parent = uniq_lbls[jj];
 							clstr.label = uniq_lbls[jj];
 							clstr.stability = 0;
 							clstr.birth_stage = ii;
 							clstr.death_stage = ii;
-							//clusters_array.push_back(clstr);
 						}
 					}
 					else{
@@ -300,7 +283,6 @@ void make_cartesian_clusters::get_stable_clusters(){
 						for(ll=0; ll<child_idx1.size(); ++ll){
 							full_labels[ii+1][child_idx1[ll]] = max_lbl+1+kk;
 						}
-//						replace(full_labels[ii+1].begin(), full_labels[ii+1].end(), uniq_lbls1[kk], max_lbl+1+kk); // Relabel the child clusters
 					}
 					clstr.child = next_children;
 					clusters_array.push_back(clstr);
@@ -312,10 +294,6 @@ void make_cartesian_clusters::get_stable_clusters(){
 			}
 			else{                 // If there is no non zero child of the current cluster (i.e. cluster has become noise now)
 				if(clusters_stable.size() != 0){ // If there is any previous cluster for this label, store it's final stage
-					vector<int> clstr_labels;
-					for(kk=0; kk<clusters_stable[clusters_stable.size()-1].size(); ++kk){
-						clstr_labels.push_back(clusters_stable[clusters_stable.size()-1][kk].label);
-					}
 					auto id2 = find(clstr_labels.begin(), clstr_labels.end(), uniq_lbls[jj]);
 					if(id2 != clstr_labels.end()){
 						cluster clstr;
@@ -403,7 +381,7 @@ void make_cartesian_clusters::extract_clusters(int stage, int index){
 
 
 void make_cartesian_clusters::make_clusters(){
-//	int brk_unit =2;
+	int brk_unit = 1;                     // Minimum step size in threshold (ms) used to break the tree
 	int ii, jj;
 // Initiate the vector of labels with 1 
 	for(i=0; i<size; ++i){
@@ -416,7 +394,7 @@ void make_cartesian_clusters::make_clusters(){
 // Sorting the vector of weights
 	vector<float> thresholds;
 	for(i=0; i<weights.size(); ++i){
-		thresholds.push_back(float(int(weights[i])));
+		thresholds.push_back(float(brk_unit*int(weights[i]/brk_unit)));
 	}
 	sort(thresholds.begin(), thresholds.end());
 	auto id = unique(thresholds.begin(), thresholds.end());
@@ -429,9 +407,6 @@ void make_cartesian_clusters::make_clusters(){
 	for(i=0; i < thresholds.size()-1; ++i){
 // Break the cluster usign the decreased weight
 		break_clusters(thresholds[i]);
-		if(current_size <= core){
-			break;
-		}
 	
 	}
 

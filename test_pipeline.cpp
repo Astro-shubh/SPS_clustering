@@ -25,12 +25,12 @@ int main(){
 	DM_axis=spccl.DM_Time;
 	Time_axis=spccl.ToA;
 	for(i=0;i< Time_axis.size();i++){
-		if(Time_axis[i] > 0000){
-			if(Time_axis[i] < 14300){
+//		if(Time_axis[i] > 0000){
+//			if(Time_axis[i] < 14300){
 				X_axis.push_back(Time_axis[i]);
 				Y_axis.push_back(DM_axis[i]);
-			}
-		}
+//			}
+//		}
 	}
 	now = chrono::system_clock::now();
 	duration = now.time_since_epoch();
@@ -65,7 +65,7 @@ int main(){
         milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
         cout << "Done constructing MST" << endl;
         cout << "Time: " << milliseconds << endl;
-	make_cartesian_clusters clustering(parent, child, Tree.Weights, X_axis.size());
+	make_cartesian_clusters clustering(Tree.Parent, Tree.Weights, X_axis.size(), 15);
 	clustering.make_clusters();
 //	for(i=0; i<clustering.clusters_stable.size(); i++){
 //		for(j=0; j<clustering.clusters_stable[i].size(); j++){

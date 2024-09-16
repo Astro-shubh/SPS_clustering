@@ -18,7 +18,7 @@ class Spanning_tree_cartesian{
                 void construct_tree();
         private:
                 float x_dist, y_dist, distance;
-                const int core=10;
+//                const int core=10;
                 int size;
                 void Cartesian(int idx1, int idx2);
 

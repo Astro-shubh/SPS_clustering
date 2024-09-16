@@ -27,7 +27,7 @@ class make_cartesian_clusters{
                 std::vector<float> weights, weights_sorted;
                 std::vector<int> child, parent, labels;
 // do_clustering() executes all the functions sequentially
-		make_cartesian_clusters(std::vector<int> Parent, std::vector<int> Child, std::vector<float> Weights, int data_size);
+		make_cartesian_clusters(std::vector<int> Parent, std::vector<float> Weights, int data_size, int Core);
 // make_clusters() sorts the weights and calls the relevant functions with decreasing order of threshold
 		void make_clusters();
 // 2D Vectors to store the dendogram of clustering, tree_labels to store the labels of clusters, tree_connections to store the labels of previous stage, 
@@ -45,7 +45,7 @@ class make_cartesian_clusters{
 // stat_clusters() stores the labels and sizes of each clusters at each state
 //		void extract_clusters();
 // core is used to compute the core distance
-                const int core=10;
+                int core;
                 int i, j, k, size, current_size;
 		std::vector<float> braking_threshold;
                 float var;
