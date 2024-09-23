@@ -65,7 +65,7 @@ int main(){
         milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count();
         cout << "Done constructing MST" << endl;
         cout << "Time: " << milliseconds << endl;
-	make_cartesian_clusters clustering(Tree.Parent, Tree.Weights, X_axis.size(), 15);
+	make_cartesian_clusters clustering(Tree.Parent, Tree.Weights, X_axis.size(), 10);
 	clustering.make_clusters();
 //	for(i=0; i<clustering.clusters_stable.size(); i++){
 //		for(j=0; j<clustering.clusters_stable[i].size(); j++){

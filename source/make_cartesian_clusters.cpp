@@ -8,22 +8,27 @@ make_cartesian_clusters::make_cartesian_clusters(vector<int> Parent, vector<floa
 	weights=Weights;
 	size= data_size;
 	core = Core;
+	labeling_status.resize(size);
 }
 
 
 
 void make_cartesian_clusters::break_clusters(float threshold){
-	int ii, jj, pre, kk, lbl=1, max_label=1;     // The zeroth lebel to assign, then it will be increased by 1 for each new cluster. The cluster labels will be (1,2,3,4....)
-	vector<int> labeling_status(size, 0), indices;  // labeling_status stores if a given element has be relebelled in this cycle or not, connect stores
-							// the parent of new clusters
 
+	int ii, jj, pre, kk, lbl=1, max_label=1;     // The zeroth lebel to assign, then it will be increased by 1 for each new cluster. The cluster labels will be (1,2,3,4....)
+	uniq_labels.clear();
+	fill(labeling_status.begin(), labeling_status.end(), 0);
+	indices.clear();
 // Looping over elements to detect breaks and relebel the resultant child clusters
 	for(jj=0; jj<size; ++jj){
-		if(weights[jj] > threshold){
+		if(weights[jj] > threshold){             // Break the links
 			parent[jj] = -1;
 		} 
-		if(labels[jj] != 0){
+		if(labels[jj] != 0){                     // Store non-zero labels to indices
 			indices.push_back(jj);
+		}
+		else{
+			parent[jj] = -1;                // Parents of all zero labels are -1
 		}
 	}
 
@@ -31,27 +36,23 @@ void make_cartesian_clusters::break_clusters(float threshold){
 		jj = indices[ii]; 
 		if(labeling_status[jj] == 0){           // Enter the loop only if the element is not noise
 			 
-				 vector<int> branch;    // Branch stores the unlabeled connected elements from the current element to the first node until a break is found 
+				 branch.clear();    // Branch stores the unlabeled connected elements from the current element to the first node until a break is found 
 				 branch.push_back(jj);  // First member of branch is current elelment
 				 pre=jj;        // pre is the index of the current element
 				 while(parent[pre] != -1){   // go backwards towards the first node until we find a 
 					 if(labeling_status[parent[pre]] == 1){
+						 lbl = labels[parent[pre]];
 						 break;
 					 }
 					 pre=parent[pre]; 
 					 branch.push_back(pre);
 				 }
 
-				 if(labeling_status[parent[pre]] == 1){               // update the branch to the label of the connected labeled node
-					 lbl = labels[parent[pre]];
-						 
-				 }
-				 else{
+				 if(parent[pre] == -1){
 					max_label = max_label + 1;
 					lbl = max_label;
-					parent[pre] = -1;	
+					uniq_labels.push_back(lbl);
 				 }
-
 
 				 for(kk=0; kk<branch.size(); ++kk){        // update the labels and the labeling status of the branch
 					 labels[branch[kk]] = lbl;
@@ -61,28 +62,30 @@ void make_cartesian_clusters::break_clusters(float threshold){
 
 	}
 	
-	vector<int> uniq_labels;
+
+
 	int lsize;
-	uniq_labels = labels;
-	sort(uniq_labels.begin(), uniq_labels.end());
-	auto id = unique(uniq_labels.begin(), uniq_labels.end());
-	uniq_labels.resize(distance(uniq_labels.begin(), id));
-	auto id0 = find(uniq_labels.begin(), uniq_labels.end(), 0);
-	if(id0 != uniq_labels.end()){
-		uniq_labels.erase(id0);
-	}
-	for(jj=0; jj< uniq_labels.size(); ++jj){
-		lsize = count(labels.begin(), labels.end(), uniq_labels[jj]);
-		if(lsize < core){
-			replace(labels.begin(), labels.end(), uniq_labels[jj], 0);
+	sorted_labels.clear();
+	sorted_labels = labels;
+	sort(sorted_labels.begin(), sorted_labels.end());            // Store the sorted array of labels that will be used to decide clusters with size less than core
+
+
+	small_labels.clear();                                        // Stores the label of clusters that have size less than core size
+	for(jj=0; jj< uniq_labels.size(); ++jj){                     // Loop over all the uniq labels
+		auto id1 = find(sorted_labels.begin(), sorted_labels.end(),uniq_labels[jj]);              // Find the first occurance of the uniq_label in the sorted array
+		int first_occ = id1 - sorted_labels.begin();                                              // index of first occurance
+		if(sorted_labels[first_occ + core-1] != uniq_labels[jj]){                                 // If the element at core indices away from the first occurance is changed, then size is less than core
+	       		small_labels.push_back(uniq_labels[jj]);                                          // Store the label of sort cluster
 		}
 	}
-	for(kk=0; kk<labels.size(); ++kk){
-		if(labels[kk] == 0){
-			parent[kk] = -1;
-		}
+	
+	for(jj=0; jj<small_labels.size(); ++jj){
+		replace(labels.begin(), labels.end(), small_labels[jj], 0);                              // Replace labels corresponding to the small clusters with zero
 	}
+
+
 	full_labels.push_back(labels);
+
 }
 
 // condense_cluslist_labelters uses the 2D array of labels_full and weights_sorted to remove the noise falling off the clusters (small clusters with size less than core_size) and label them according to the inheritence 

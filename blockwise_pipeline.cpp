@@ -2,6 +2,7 @@
 #include <fstream>
 #include <bits/stdc++.h>
 #include <chrono>
+#include <omp.h>
 #include "source/read_spccl.h"
 #include "source/prepare_data.h"
 #include "source/Spanning_tree_cartesian.h"
@@ -31,7 +32,8 @@ int main(){
         }
 	outfile1.close();
 
-	int block_size =  5000;
+	int block_size =  10000;
+	int numthreads = int(size/block_size)+1;
 	vector<vector<float>> X_blocks, Y_blocks;
 	vector<float> X_vec, Y_vec;
 	vector<make_cartesian_clusters::cluster> all_clusters;
@@ -51,6 +53,8 @@ int main(){
 			}
 		}
 
+		cout << "Launching " << numthreads << " threads" << endl;
+		#pragma omp parallel for num_threads(numthreads)
 		for(i = 0; i<X_blocks.size(); ++i){
 		
 	

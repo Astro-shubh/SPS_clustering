@@ -30,15 +30,14 @@ void Spanning_tree_cartesian::construct_tree(){
 	key[0] = 0.0;                               // The first element will be part of the tree with no parent
         while(indices.size() > 1){                  //lopping over untill all elements are connected
                 int u, v, index;
-		auto min_index = min_element(key.begin(), key.end()) - key.begin();     // Get the index of smallest element in the key
-                u = min_index;
+		u = min_element(key.begin(), key.end()) - key.begin();     // Get the index of smallest element in the key
 		index = indices[u];                                             // Real index of the element that has minimum value of key (i.e. this element is nearest to the current tree)
 		indices.erase(indices.begin()+u);                               // Remove the element
 		key.erase(key.begin()+u);                                       // Remove the key
 		for(v=0; v<indices.size(); ++v){                                // Loop over remaining elements that are not part of the tree
 			Cartesian(index, indices[v]);                           // Compute the distance from the nearest element to the tree
                         if(distance < key[v]){                                  // If the distance between the new tree element and the index of v is less than the earlier distance of v from the tree
-				Parent[indices[v]]=index;                       // Update the parent of each remaining element 
+				Parent[indices[v]] = index;                       // Update the parent of each remaining element 
                                 key[v] = distance;                              // Update the key of v because the tree has a new element and distance to the tree from the v is now less than before
                                 Weights[indices[v]] = distance;                 // Update the Weights
                         }

@@ -48,6 +48,7 @@ class make_cartesian_clusters{
                 int core;
                 int i, j, k, size, current_size;
 		std::vector<float> braking_threshold;
+		std::vector<int> branch, labeling_status, indices, uniq_labels, sorted_labels, small_labels;
                 float var;
 };
 
